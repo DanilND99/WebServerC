@@ -23,26 +23,38 @@ unsigned long imagesize(char* file){
     return len;
 }
 char* requestHandler(char request[30000]){
-//write en el socket primero y el contenido aparte image/jpg
-    printf("Entered handler\n");
+    printf("entered handler\n");
     char response[20000];
+    if(strcmp(request, "") == 0){
+        strcpy(response, "HTTP/1.1 404 Not_Found\n");
+        printf("Empty Request\n");
+        return strdup(response);
+    }
+    printf("Passed first if\n");
     const char s[2] = " ";
     char *token;
+    printf("declaration passed\nRequest: %s", request);
     token = strtok(request, s);
+    printf("Token1: %s",token);
     token = strtok(NULL, s);
+    printf("Token2: %s",token);
     char compare[100];
     strcpy(compare, token);
-    printf("%s\n",compare);
-    if(strcmp(compare,"/index.html") || strcmp(compare,"/") || strcmp(compare,"/TC2025.html")){
-        printf("entered true\n");
-        const char a[2] = "/";
-        char *token2;
-        token2 = strtok(compare, a);
-        char dir[20];
-        strcpy(dir, token2);
-        int html_fd = open(dir,O_RDONLY);
-        printf("open\n");
-        unsigned long fileSize = fsize(dir);
+    if(strcmp(compare,"/index.html") == 0|| strcmp(compare,"/") == 0|| strcmp(compare,"/TC2025.html") == 0){
+        int html_fd;
+        unsigned long fileSize;
+        if(strcmp(compare,"/") == 0){
+            html_fd = open("index.html",O_RDONLY);
+            fileSize = fsize("index.html");
+        }else{
+            const char a[2] = "/";
+            char *token2;
+            token2 = strtok(compare, a);
+            char dir[20];
+            strcpy(dir, token2);
+            html_fd = open(dir,O_RDONLY);
+            fileSize = fsize(dir);
+        }
         char file[fileSize];
         char size[15];
         sprintf(size,"%lu",fileSize);
@@ -54,12 +66,28 @@ char* requestHandler(char request[30000]){
         strcat(response, "\n\n");
         strcat(response,file);
         puts(response);
+    }else if(strcmp(compare,"/images/background2.jpg") == 0 || strcmp(compare,"/images/background1.jpg")){
+        const char a[2] = "/";
+        char *token2;
+        token2 = strtok(compare, a);
+        char dir[40];
+        strcpy(dir, token2);
+        int img_fd = open(dir,O_RDONLY);
+        unsigned long fileSize = imagesize(dir);
+        char file[fileSize];
+        char size[15];
+        sprintf(size,"%lu",fileSize);
+        read(img_fd, file, fileSize);
+        close(img_fd);
+        char header[59] = "HTTP/1.1 200 OK\nContent-Type: image/jpg\nContent-Length: ";
+        strcpy(response, header);
+        strcat(response, size);
+        strcat(response, "\n\n");
+        strcat(response,file);
+        puts(response);
     }else{
-        printf("entered to else\n");
         strcpy(response, "HTTP/1.1 404 Not_Found\n");
-        printf("copy to response to else\n");
     }
-    printf("%s\n", response);
     return strdup(response);
 }
 
@@ -68,26 +96,6 @@ int main(int argc, char const *argv[])
     int server_fd, new_socket; long valread;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
-    /*
-    int html_fd = open("TC2025.html",O_RDONLY);
-    unsigned long fileSize = fsize("TC2025.html");
-    char response[20000];
-    char file[fileSize];
-    char size[15];
-    sprintf(size,"%lu",fileSize);
-    read(html_fd, file, fileSize);
-    close(html_fd);
-    char header[59] = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: ";
-    strcpy(response, header);
-    strcat(response, size);
-    strcat(response, "\n\n");
-    strcat(response,file);
-    puts(response);
-    char *hello = response;*/
-    // Only this line has been changed. Everything is same.
-    
-    //char *hello = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!";
-    //char *hello = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " + fileSize + "\n\n" + file;
     
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
@@ -122,16 +130,16 @@ int main(int argc, char const *argv[])
             perror("In accept");
             exit(EXIT_FAILURE);
         }
-        //printf("passed if\n");
         char buffer[30000] = {0};
         valread = read( new_socket , buffer, 30000);
-        //printf("passed read\n");
         char throwable[30000];
-        strcpy(throwable,buffer);
-        char *hello = requestHandler(throwable);
+        strcpy(throwable, buffer);
+        printf("Buffer\n");
         printf("%s\n",buffer);
-        write(new_socket , hello , strlen(hello));
-        printf("------------------Hello message sent-------------------");
+        char *request = requestHandler(throwable);
+        
+        write(new_socket , request , strlen(request));
+        printf("------------------Response sent-------------------");
         close(new_socket);
     }
     return 0;
