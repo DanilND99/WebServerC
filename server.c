@@ -35,9 +35,9 @@ char* requestHandler(char request[30000]){
     char *token;
     printf("declaration passed\nRequest: %s", request);
     token = strtok(request, s);
-    printf("Token1: %s",token);
+    printf("Token1: %s\n",token);
     token = strtok(NULL, s);
-    printf("Token2: %s",token);
+    printf("Token2: %s\n",token);
     char compare[100];
     strcpy(compare, token);
     if(strcmp(compare,"/index.html") == 0|| strcmp(compare,"/") == 0|| strcmp(compare,"/TC2025.html") == 0){
@@ -61,25 +61,6 @@ char* requestHandler(char request[30000]){
         read(html_fd, file, fileSize);
         close(html_fd);
         char header[59] = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: ";
-        strcpy(response, header);
-        strcat(response, size);
-        strcat(response, "\n\n");
-        strcat(response,file);
-        puts(response);
-    }else if(strcmp(compare,"/images/background2.jpg") == 0 || strcmp(compare,"/images/background1.jpg")){
-        const char a[2] = "/";
-        char *token2;
-        token2 = strtok(compare, a);
-        char dir[40];
-        strcpy(dir, token2);
-        int img_fd = open(dir,O_RDONLY);
-        unsigned long fileSize = imagesize(dir);
-        char file[fileSize];
-        char size[15];
-        sprintf(size,"%lu",fileSize);
-        read(img_fd, file, fileSize);
-        close(img_fd);
-        char header[59] = "HTTP/1.1 200 OK\nContent-Type: image/jpg\nContent-Length: ";
         strcpy(response, header);
         strcat(response, size);
         strcat(response, "\n\n");
@@ -144,3 +125,24 @@ int main(int argc, char const *argv[])
     }
     return 0;
 }
+/*
+else if(strcmp(compare,"/images/background2.jpg") == 0 || strcmp(compare,"/images/background1.jpg")){
+        const char a[2] = "/";
+        char *token2;
+        token2 = strtok(compare, a);
+        char dir[40];
+        strcpy(dir, token2);
+        int img_fd = open(dir,O_RDONLY);
+        unsigned long fileSize = imagesize(dir);
+        char file[fileSize];
+        char size[15];
+        sprintf(size,"%lu",fileSize);
+        read(img_fd, file, fileSize);
+        close(img_fd);
+        char header[59] = "HTTP/1.1 200 OK\nContent-Type: image/jpg\nContent-Length: ";
+        strcpy(response, header);
+        strcat(response, size);
+        strcat(response, "\n\n");
+        strcat(response,file);
+        puts(response);
+    }*/
